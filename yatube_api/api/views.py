@@ -1,11 +1,12 @@
 from rest_framework import viewsets
 from django.core.exceptions import PermissionDenied
-from posts.models import Post, Group, Comment
+from posts.models import Post, Group
 from .serializers import PostSerializer, GroupSerializer, CommentSerializer
+from django.shortcuts import get_object_or_404
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().select_related("author")
     serializer_class = PostSerializer
 
     def perform_create(self, serializer):
@@ -32,7 +33,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         post_id = self.kwargs.get("post_id")
-        new_queryset = Comment.objects.filter(post=post_id)
+        post = get_object_or_404(Post, pk=post_id)
+        new_queryset = post.comments
         return new_queryset
 
     def perform_create(self, serializer):
